@@ -31,6 +31,8 @@ In this project, Windows Server 2019 is configured as a Domain Controller (DC) w
 
 This project serves as a practical guide for IT professionals and students interested in learning how to efficiently manage Active Directory environments using PowerShell. By automating critical tasks and ensuring proper network configuration, this setup can be adapted for real-world enterprise environments or educational purposes.
 
-## License
 
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for more details.
+## Credits
+
+This project was made with the help of Josh Madakor's video, which can be found [here](https://www.youtube.com/watch?v=MHsI8hJmggI).
+

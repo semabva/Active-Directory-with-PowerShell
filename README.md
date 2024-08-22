@@ -1,4 +1,4 @@
-# ActiveDirectoryLab
+# Active Directory with PowerShell
 
 ## Description
 

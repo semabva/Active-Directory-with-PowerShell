@@ -1,296 +1,315 @@
-![](images/ActiveDirectory.png)
-# How to setup a Windows Active Directory (within Virtual Box) to create a corporate network.
-### Learning Objectives:
-1. We will learn how to provision multiple virtual machines.
-2. Configure a basic Windows networking environment with Active Directory.
-3. Execute PowerShell script to further our Active Directory environment. 
+# ActiveDirectoryLab
 
+## Description
 
-### Technologies and Protocols:
-* Oracle Virutal Box
-* Window's Active Directory
-* Window's networking: Domain controler, DHCP and NAT
-* Powershell 
+This project demonstrates the creation of an Active Directory home lab environment with the use of Oracle VM Virtualbox. A creation of a Domain Controller (DC) is made on Microsoft Server 2019, along with Active Directory (AD). To simulate a large business environment, a creation of over 1000 users in AD is made with the help of a PowerShell script. 
 
+## Environments Used
 
-### Overview:
-![](images/WindowsADdrawIO.png)
-Pictured above is a high-level overview of our corporate network. First, we are going to download Virtual Box, Windows 10 and Windows server 2019 ISO files (**see below**). Then, we are going to create our first virtual machine with Windows server 2019 installed. This will act as our doamin controller (DC) and where we will house Active Directory (AD). We are going to give our DC two network interface cards (NICs): one will connect to the external ![#f03c15](https://via.placeholder.com/15/f03c15/f03c15.png) `internet` the other will be for the ![#1589F0](https://via.placeholder.com/15/1589F0/1589F0.png) `internal` network so that the Windows 10 clients can connect through and reach the internet.
+- **Oracle VM Virtualbox**
+- **Microsoft Server 2019**
+- **Windows 10** (22H2)
 
-We will assign IP addressing for the internal network, while the external network automatically gets IP addressing from your home network. After assinging IPs we will create our domain thorugh Active Directory, configure network address translation (NAT) and setup Dynamic Host Configuration Protocol (DHCP) for internet connectivity.
+> Download the files above beforehand, as those are large and will take some time.
 
-Finally, we will download and run a PowerShell script that will automatically create +1k users in Active Directory to simumlate our enterprise users. 
+## Hardware Requirement
 
-After completing our DC virtual machine, we will create another virtual machine that will be our Windows 10 client. This client machine will connect to our ![#1589F0](https://via.placeholder.com/15/1589F0/1589F0.png) `internal` network through our DC's domain name (eventually reaching the ![#f03c15](https://via.placeholder.com/15/f03c15/f03c15.png) `internet`). 
+- *Minimum* : 2 GB on Domain Controller & 2 GB on Domain VMs
+- *Recommended* : 4 GB on Domain Controller & 4 GB on Domain VMs
 
+> For this lab a minimum of the systems total RAM should not be less then 8GB. The hosting system (your own computer) should preferably have more, as it will speed things up and make all things smoother/faster. 
 
+## Languages and Utilities Used
 
-## Step 1: [Download: Virtual Box](https://www.virtualbox.org/wiki/Downloads "Virtual Box"), [Windows '19 server ISO](https://www.microsoft.com/en-us/evalcenter/download-windows-server-2019 "Windows '19 server ISO") and [Windows 10 ISO](https://www.microsoft.com/en-us/evalcenter/download-windows-server-2019 "Windows 10 ISO").
-- Virtual box (download ‘VM Virtual Box Extension Pack’ found on the same page as Virtual Box for your host machine download )
-- ISO: Windows Server and Windows 10
-    - Set RAM (2048 MB is fine enough) and memory (30 GB is fine) to your needs.
-- Create a virtual hard disk now
-- VDI
-- Dynamically allocate
-    - Under settings > general > advance set ‘shared clipboard’ and ‘drag’n’drop’ to bidirectional (drag files + copy/paste from host machine)
-    
-![](images/Home%20Lab%20-DC/DomainController/DC1.png) 
+- **Active Directory**
+- **PowerShell**
+- **CMD**
+  
+## Links
 
-## Step 2: Our goal is to have two NICs (network interface cards); one for the intranet and one for the internet.
-- Under settings > network > Adapter 2 tab: select Internal Network. This will connect our machine to the intranet (internal network).
-- The Adapter 1 tab is set to NAT network by default (our connection to the internet).
-       
-![](images/Home%20Lab%20-DC/DomainController/DC2.png)
+- **Oracle VMware:** https://www.virtualbox.org/wiki/Downloads
+- **Microsoft Server 2019:** https://www.microsoft.com/en-us/evalcenter/download-windows-server-2019
+- **Windows 10 ISO:** https://www.microsoft.com/en-us/software-download/windows10
 
-## Step 3: Upload ISO server onto our newly created domain controller VM.
-- Go to settings > storage and click the blue disk/CD image. 
-- Click ‘Choose a disk file…’ and upload the server ISO from where you saved it to.
+# Network Diagram
+![](https://i.imgur.com/TiLTphN.png)
 
-![](images/Home%20Lab%20-DC/DomainController/DC3.png)
 
-## Step 4 Configure your new Windows server machine (selecting standard desktop experience).
-- This may take a while
+## Download Win 10
 
-![](images/Home%20Lab%20-DC/DomainController/DC4.png)
+1. Go to https://www.microsoft.com/en-us/software-download/windows10 - click *"Download Now"* - Follow Installation
 
-> Windows DC
-> 
-> **Username: Administrator**
->
-> **Password: Password1**
-> 
-> If asked to Press Ctrl+Alt+Delete to Unlock the home page click Input from the top of the page > keyboard > Insert Ctrl+Alt+Delete (these instructions are for a Mac host machine, but similar instructions for a Windows Host).
+![](https://i.imgur.com/HzBDUAH.png)
 
-## Step 5: Install windows guest additions 64
-- First, click Devices (found on top of the screen, on Mac) > insert guest additions CD image
-- Click file explorer > this pc and double click CD Drive (D:) Virtual Box Guest Additions
-- Double click and install BoxWindowsAdditions-amd64
+3. Download *"Media Creation Tool"* - Open it to create Win10 ISO-file. 
 
-![](images/Home%20Lab%20-DC/DomainController/DC5.png)
+4. Chose ISO-creation 
+![](https://i.imgur.com/VgSk4mR.png)
+5. Chose ISO-configuration 
+![](https://i.imgur.com/YgfIjfL.png)
 
-## Step 6: Set up NIC - internal connection 
-- Click the little computer symbol found in the bottom right of the screen
-- Choose ‘undefined network’ > change adapter options
-- We should see two networks on this machine. Re-name the left most inter-net and the second one intra-net.
-- *Inter-net is our NIC to the internet and intra-net is our NIC to our internal network.*
+4. Wait for file to download.
+   
+![](https://i.imgur.com/6CndqKY.png)
 
-![](images/Home%20Lab%20-DC/DomainController/DC6.png)
+## Download Win Server 10
 
-## Step 7: After re-naming, we need to assign an IP to intra-net (DHCP automatically gives inter-net an IP).
-- Right-click intra-net > properties  > double click internet protocol version (TCP/IPv4)
-- Assign IPs as seen in screenshot below:
+1. Go to https://www.microsoft.com/en-us/evalcenter/download-windows-server-2019 and download the Windows Server 2019 ISO-file. It might take some time, so make sure to enjoy a bit of coffee meanwhile :)
+![](https://i.imgur.com/e3PLNpr.png)
 
-![](images/Home%20Lab%20-DC/DomainController/DC7.png)
+## Download VirtualBox + Extension Pack
 
-## Step 8: Re-name this PC
-- Right-click the start window found at the bottom left > system > rename this pc
-- Re-name to DC (domain controller)
-- Restart your VM
+1. Download Oracle VM VirtualBox from https://www.virtualbox.org/wiki/Downloads. Choose your Operating System, for this installation Windows will work just fine. ![](https://i.imgur.com/m6yDb8z.png)
 
-![](images/Home%20Lab%20-DC/DomainController/DC8.png)
+2. Install Oracle VM VirtualBox 
+	- Open the Setup file from where you saved your downloaded file and press *"Next"* ![](https://i.imgur.com/uKIwmwF.png)
+	- Choose your installation location if you want by pressing "*Browse*". Then press "*Next*". ![](https://i.imgur.com/hn1hRL2.png)
 
-## Step 9A: Install Active Directory Domain Services
-- Search for server manager > click Add roles and features and click next
-- Under installation, type click role-based or feature-based installation and click next
-- Under server, select ‘select a server from the server pool’ and choose our only server option and click next
+	- Press "*Next*" a few times and then "*Install*", once the installation is done press "*Finish*" ![](https://i.imgur.com/D8QE3Jh.png)
 
-![](images/Home%20Lab%20-DC/DomainController/DC9a.png)
 
-## Step 9B: Under server roles, click Active Directory Domain Services and click Add Features
-- Under Features, click next to skip, and under AD DS click next to skip. 
-- Under the Confirmation tab, click Install
+3. Add Extension Pack from Step 1 above, and follow the Installation process.
 
-![](images/Home%20Lab%20-DC/DomainController/DC9b.png)
+## Open Oracle VMWare & Create DC
 
-## Step 10A: Create our domain after installing the domain service software
-- Open the Server Manager dashboard, click on the yellow notification icon on top and click Promote this server to a domain controller
-- Under Deployment Configuration, select Add a new forest and name the Root domain mydomain.com. Click next.
-- Under Domain Controller Options, input and confirm your password (**Password1**). Click next
+1. Open the VMWare and click *"New"* and choose a name for your VM. I chose *"DC"* for convenience. Also, chose location of the ISO-image, along with the edition. Make sure to mark the *"Skip Unattended Installation"* click *"Next"*. 
+![](https://i.imgur.com/wILYnAt.png)
 
-![](images/Home%20Lab%20-DC/DomainController/DC10a.png)
+2. Allocate enough Hardware resources to your VM. I suggest at least 4GB of RAM and 20GB of HDD Storage. ![](https://i.imgur.com/Fu0mxCq.png)
+	![](https://i.imgur.com/tTU4roq.png)
+3. Once you are happy with the specs of the VM, follow through the rest of the installation.
 
-## Step 10B: Under DNS Options, click next to skip.
-- Under Additional Options, click next to skip.
--  Under Paths, click next to skip.
--  Under Review Options, click next to skip.
--  Finally, under Prerequisites Check,  click Install. The system will restart.
--  Sign in to the newly created MYDOMAIN\Administrator account **Password1**
+4. One thing that might be useful is the *ability to Copy/Paste & Drag/Drop* things between your computer and the VM, therefore I recommend changing a setting that allows for that. It's done under the *"Settings" and "Advanced tab"*. ![](https://i.imgur.com/4LbcdvK.png)
+5. This DC will have *2 Network Interface Cards (NIC)*, also called *Network Adapters*, one for access to the Internet and one for the Internal network. Additional Network Adapter can be added under the *"Network"* setting. 
+   ![](https://i.imgur.com/C1p3Fmy.png)
+	![](https://i.imgur.com/uHoprGH.png)
 
-![](images/Home%20Lab%20-DC/DomainController/DC10b.png)
+## Install Windows Server 2019
 
-## Step 11A: Create a dedicated Admin Account
-- Click Start > Windows Administrative Tools > Active Directory Users and Computers 
-- Right-click mydomain.com and click > New > Organizational Unit. Uncheck the box, and name it Admins.
-- Right-click the new folder Admins and click > New > User
+1. To start the DC VM click the "Start" button. ![](https://i.imgur.com/FC7zmX2.png)
+2. Begin Installation of Win Server 2019 by choosing your Language and Time options. ![](https://i.imgur.com/FSiLKkY.png)
+3. Choose the "Windows Server 2019 Standard Evaluation with Desktop Experience". ![](https://i.imgur.com/hKeqNVL.png)
+4. Follow the process, and chose the "Custom" Installation. ![](https://i.imgur.com/wvRhHKV.png)
+5. Chose Storage for the Installation, since this VM only has one HDD, the choice is simple. ![](https://i.imgur.com/dRPRphk.png)
+6. The Installation process might take a while with reboots and blackscreens. Make sure to not touch anything and let the installation complete. While the installation goes on, take a break and relax for a while. 
+7. Once the Installation is done, make sure to set a password for you Administrator account.  ![](https://i.imgur.com/FIRFIMQ.png)
+8. *To log in you have to press "Ctrl+Alt+Delete"*, however VM's can be tricky in that sense.
+	Here is how to do it: Go to top toolbar, under: *"Input"* --> *"Keyboard"* --> *"Insert Ctrl+Alt+Delete"*. 
 
-![](images/Home%20Lab%20-DC/DomainController/DC11a.png)
+9. Close all the tabs and windows.
+10. To ensure a better quality of life experience, with a smoother mouse, ability to make the VM window bigger etc. Install *"Guest Additions CD"* under the tab *"Devices"*, it is found in the *upper left corner of your VM*
 
-## Step 11B: Fill out first and last name.
-- Choose and confirm the password **Password1**, uncheck User must change the password at next logon, and *CHECK* Password never expires. Click next. Click Finish.
+![](https://i.imgur.com/TN6wIli.png)
 
-![](images/Home%20Lab%20-DC/DomainController/DC11b.png)
+11. Click the "*File Explorer*" on the taskbar, navigate to "*This PC*" and double-click the "*irtualBox Guest Additions*".![](https://i.imgur.com/CvenSzg.png)
 
-> Make note of your full name AND user logon name for furture use
+12. Double-click the "*Windows-Additions-amd64*" and follow the installation by clicking "*Next*" on everything. 
+13. Once done click the "*I want to manually reboot later*" and "*Next*".
+14. Now shut down the VM, and restart it in VirtualBox. ![](https://i.imgur.com/IlizOOb.png)
 
-## Step 12: Make our user Admin
-- Right-click our new admin and click > Properties > Member Of and click Add
-- Enter domain admins into the field and click Check Names off to the right. It should resolve into Domain Admins.
-- Click > Ok > Apply > Ok  
-- Sign out 
+## IP Adressing Setup
 
-![](images/Home%20Lab%20-DC/DomainController/DC12.png)
+>The diagram tells us that our NIC 1 will get Internet from our router. Our NIC 2 however needs some configuration to work properly. Lets do that now.
 
+1. For convenience lets rename this VM to *DC* so it's easy identified. *Right click the Start Icon* -> *System* ![](https://i.imgur.com/4fXOmI9.png)
+2. *Rename this PC* and Reboot the computer.![](https://i.imgur.com/hLUelXI.png)
 
-## Step 13: Re-login with Domain Admin account
-- Select Other User and log in with the admin credentials we created earlier 
-- **Password1**
+2. Identify the NIC by going to *Control Panel* -> *Network and Internet* -> *Network Connections* - there should be 2 NIC's. Usually named something like "Ethernet 1" etc.
+	Lets find out which is for the Internet and which one is the Internal one.
 
-![](images/Home%20Lab%20-DC/DomainController/DC13.png)
+3. *Doubleclick Ethernet 1* -> *Details* and the routers IP adress is visible in the *IPv4 DNS Server*. There is also an IPv4 address and a regular subnetmas (255.255.255.0). Thus this is the NIC that is connected to the Internet. ![](https://i.imgur.com/AY2V38t.png)
 
-## Step 14A: Install Remote Access Server (RAS) and Network Address Translation (NAT): This allows our Windows clients to access the private (internal) network as well as the internet through our domain controller. 
-- Search and open Server Manager. From the dashboard click > Add roles and Features > next > next 
-- Under Server Selection select our server and click next
-- Under Server Roles select Remote Access and click next
-- Under Features click next
-- Under Role Services check Routing and click Add Features
-- Click next until you reach Results > click install
+4. Rename it for conveniences sake to e.g *"INTERNET NIC"*.
+5. Rename the second one to something like: *"Internal"*
+6. Time to configure the IP addresses for the Internal NIC. *Doubleclick on Internal* -> click *"Internet Protocol verion 4 (TCP/IPv4)* and assign addresses below. ![](https://i.imgur.com/luNia6H.png)
 
-![](images/Home%20Lab%20-DC/DomainController/DC14a.png)
+7. Depending on the architecture of the network the IP addresses might vary, for this setup the IP address of the Internal NIC is *172.16.0.1* and submask of *255.255.255.0*.
+   
+	- The *Default gateway is empty*.
+	- The DNS will be set to *127.0.0.1* which is an loopback address referring to itself, in this case the DC which will serve as its own DNS, as well as the DNS of the Client VM that will be connected to the DC. 
 
-## Step 14B: Now to install NAT
-- On Server Manager Dashboard click Tools from the top of the window > Routing and Remote Access
-- Right-click DC (local) > Configure and Enable Routing and Remote Access > next > select Network address translation (NAT) and click next
-- If you do not see any Network Interfaces click cancel and click Tools to repeat the steps one more time.
 
-![](images/Home%20Lab%20-DC/DomainController/DC14b.png)
+## Install AD & DS
 
-## Step 14C: Install NAT (cont.)
-- Select Use this public interface to connect to the internet and choose INTER-net (IP address x.x.x.x DHCP)
-- Click next > finish
-- After some time, DC (local) icon should show and green arrow
+>In this step we will perform the installation of Active Directory along with Domain Services. Active Directory Domain Services (AD DS) is a Microsoft tool that helps manage users, passwords, and access to files on a network. It makes things easier for administrators and keeps everything secure.
 
-![](images/Home%20Lab%20-DC/DomainController/DC14c.png)
+1. Go to *Server Manager* by clicking *Start* and opening *Server Manager* ![](https://i.imgur.com/eEJ71UU.png)
+2. Click *Add roles and features* -> *Chose server* (there is only one named DC here)![](https://i.imgur.com/ieOUcC7.png)
 
-## Step 15A: Set up a DHCP server on Domain Controller (in order to resolve an IP and connect to the internet for the client).
-- Server Manager Dashboard > Add Roles and Features click > next until you reach Server Roles
-- Under Server Roles check the box DHCP server and click Add features.
-- Click next until > install
 
-![](images/Home%20Lab%20-DC/DomainController/DC15a.png)
+3. Make sure to click the right option here *Active Directory Domain Services* ![](https://i.imgur.com/xyjjmS9.png)
+4. Click *Add Features*. 
 
-## Step 15B: Go back to Server Manager Dashboard and click > Tools > DHCP
-- Click dc.domain.com and right-click IPv4 > new scope
-- Click next and name: 172.16.0.100-200 and click next
-- with a little faith, match the start and IPs as pictured, as well as the length and subnet mask. 
-- Click next > next; under Configure DHCP Options select yes and hit next
-- Set the default gateway IP address as 172.16.0.1 and click ADD. Click next
-- Click next until you reach and click FINISH
+![](https://i.imgur.com/VtRd4C8.png)
 
-![](images/Home%20Lab%20-DC/DomainController/DC15b.png)
+5. Click *Next and Install*. 
 
-## Step 15C: Right-click dc.domain.com > authorize
-- Right-click IPv4 > refresh
-- The icons should turn green as pictured 
+![](https://i.imgur.com/dtxVb7F.png)
 
-![](images/Home%20Lab%20-DC/DomainController/DC15c.png)
+6. Now the AD software is installed, but the Domain creation remains, lets do that now. Click the *flag* followed by *"Promote this server to a domain controller"*.![](https://i.imgur.com/GLMy9qe.png)
+7. Click *Add a new forest* and name it whatever you want and click *Next*![](https://i.imgur.com/SMgVIWF.png)
+8. Set a password for (*DSRM*) in case you need to restore the Directory Services.![](https://i.imgur.com/sjK1O9C.png)
+9. Now click *Next* until the *Install* button is shown, then click on that. This process might take a little while, just wait it out, afterwards the machine will restart. 
+10. Once the machine reboots, login and now lets create a dedicated admin accout for ourselves, instead of using the built in one.
+11. So, click *Start* and under *Windows Administrative Tools* click *Active Directory Users and Computers* ![](https://i.imgur.com/1RhAKsc.png)
+12. Click on your *domain name* -> *New* -> *Organizational Unit* ![](https://i.imgur.com/0qSbwPp.png)
+13. Name the OU to something suiting, like *ADMINS* 
 
-## Step 16: Enable web browsing on local DC
-- Server Manager > Dashboard > Configure this local server
-- Click ‘on’ option for IE Enhanced Security Configuration 
-- Select the OFF option for both Administrators and Users
+![](https://i.imgur.com/kfMsMty.png)
 
-![](images/Home%20Lab%20-DC/DomainController/DC16.png)
+14. *Create a new user* under the OU that was just created.
 
-## Step 17A: Use Power Shell script to create client users (instead of manually creating them).
-- [Powershell Script](https://github.com/joshmadakor1/AD_PS "Powershell Script")
-- On the GitHub link, click > code and download ZIP (save it to the desktop)
-- Open the folder and open names.txt (text file with randomly generated names), and add your name to the top of the file.
-- Click file > save and close the file
+![](https://i.imgur.com/IIbEUVU.png)
 
-![](images/Home%20Lab%20-DC/DomainController/DC17a.png)
+15. Add First and Last name, along with a User logon name. It is common to use some sort of special naming for admin accounts, for example putting an *"a-"* prior to the name.
 
-## Step 17B: Click start > right-click PowerShell ISE > Run as Administrator 
-- Click file > open > AD_PS-master (from desktop) > 1_CREATE_USERS 
-- Now to enable the execution of scripts in PowerShell: on the command line write Set-Execution Policy Unrestricted and click Yes to All when prompted 
+![](https://i.imgur.com/kzgs6A5.png)
 
-![](images/Home%20Lab%20-DC/DomainController/DC17b.png)
+16. Set a Password and press *Next*
 
-> Some explanation to Create Users script: the script creates users (New-Aduser) and gives them the user name found in names.txt file
-> ($USER_FIRST_LAST_LIST = Get-content .\names.txt); additionally their passwords are set to Password1 ($PASSWORD_FOR_USERS = Password1)
+![](https://i.imgur.com/ncCdBgk.png)
 
-## Step 17C: Let’s execute our script 
-- On the command line, let’s change our directory to execute our code: cd C:\users\your-username\desktop\AD_PS-master
-- Your-username should begin with “a-“. TIP: use the TAB to auto-complete.
-- From the top, hit the green play button icon to run the script. Click Run once when prompted
-- Viola! The user accounts should be created in real-time.
-- Go back to Server Manager > Dashboard and click tools > Active Directory Users and Computers. Right-click mydomain.com and click refresh. Under the _USERS folder within mydomain.com, we can confirm our newly created users.
-- If you right-click the _USERS folder > find… we can search for specific users and edit their settings. Try searching for yourself and play around!
+17. Now it's time to add this user to the *Domain Admins Group* by *Right clicking the user* -> *Properties* -> *Member Of* -> *Add* -> type in *"Domain Admins"* and click *Check Names* followed by pressing the *OK* ![](https://i.imgur.com/IFWqncD.png)
+18. Now press *Apply* and confirm that the user member is now in the Domain Admins group, then press *OK*![](https://i.imgur.com/aLcSqbx.png)
+19. Now lets *Sign out* and *Login as our new user*.
 
-![](images/Home%20Lab%20-DC/DomainController/DC17c.png)
+![](https://i.imgur.com/NducZse.png) ![](https://i.imgur.com/0Ux4R3g.png)
 
-![](images/Home%20Lab%20-DC/DomainController/DC17c2.png)
+20. Done!
 
-![](images/Home%20Lab%20-DC/DomainController/DC17c3.png)
+## Install RAS/NAT
 
+> The purpose of this is to allow the Client on the Internal Virtual Network to be able and access the Internet through the Domain Controller (DC).
 
-# Time to create our **Windows 10 Client** in Virtual Box.
+1. Go to the *Server Manager* under the *Start* menu. ![](https://i.imgur.com/5TFbUXx.png)
+2. Click *Add roles and features*, click *Next* until you come to *Server Roles*, there click the *Remote Access* ![](https://i.imgur.com/hGIiKMh.png)
+3. Click *Routing*.
 
-### Step 1: Head back into virtual box and click > new; name it CLIENT1 with a version of Windows 10 (64-bit). Click Continue. 
-- 2048 MB of RAM is fine.
-- Create a virtual hard disk now
-- VDI
-- Dynamically allocated
-- Under settings > advance set Shared Clipboard and Drag’n’Drop to Bidirectional 
-- Under system > Network select Internal Network (instead of using our home network with NAT, we are going to use our internal ’corporate’ network)
-- Double-click CLIENT1 to start up and click the folder icon with the green arrow
-- Click add disk image and find your Windows 10 ISO file to upload
+![](https://i.imgur.com/X00rjwV.png)
 
-![](images/Home%20Lab%20-DC/Client/C1.png)
+4. And *Add Features*.
 
-## Step 2: Install and set up CLIENT1
-- Custom install 
-- I don’t have a product key
-- (If prompted select Windows 10 Pro)
-- (If prompted select join Domain)
-- Name: user, on password click next
-- Turn off all services and Cortona
+![](https://i.imgur.com/VPTOU7w.png)
 
-## Step 3: Let’s test connectivity (remember, we are using the DC as our default gateway to connect us to the internet)
-- Search and open the command prompt
-- On the command line: ping www.google.com
-- If zero packets are lost this means a couple of things; (1) our DNS resolved and our DNS server is up and running, and (2) our connectivity to the internet is up!
-- The DC forwards are ping requests and sends them right back to us successfully.
+5. Then click *Next* all the way and then *Install*, this will take a little while.
+6. Once the installation is done, *Close* and go to *Tools* up in the right corner, followed by *Routing and Remote Access*. ![](https://i.imgur.com/goMLpnd.png)
+7. This will open the Control Panel for Routing and Remote Access. Once there *Right click* on *DC* and chose *Configure and Enable Routing and Remote Access*.
 
-![](images/Home%20Lab%20-DC/Client/C3.png)
+![](https://i.imgur.com/sY6ZRXs.png)
 
-## Step 4: Join this client to our domain controller (and rename)
-- Right-click start button > system
-- Scroll to the bottom and click Rename this PC (advance)
-- Click Change… and rename it to CLIENT1
-- Select Domain under Member of and type mydomain.com. Click ok
-- When prompted sign in with your domain login: a-your_name AND password (Password1).
-- Restart your computer 
+8. Once there lick *Next* and chose *Network adress translation (NAT)![](https://i.imgur.com/tLSerKc.png)
+9. Then choose the public interface, this is why naming the NIC's in the beginning makes things easier now. Click *Next*![](https://i.imgur.com/8I3KjaX.png)
+10. Done! Time to set up the DHCP Server for the upcoming client.
 
-![](images/Home%20Lab%20-DC/Client/C4.png)
+## DHCP Setup
 
-## Step 5: Check Address Lease on DC
-- Back on DC, go to your Server Manager Dashboard > Tools > DHCP
-- Under dc.mydomain.com > IPv4 > Scope > Address lease we can see the IP our CLIENT1 is assigned to (in an enterprise environment this space would be filled with our CLIENT IPs).
+> This setup *allows the DC to distribute IP addresses to clients automatically*, with a set *lease time*, which in turn will allow the Client on the Virtual Network to access the internet. 
 
-![](images/Home%20Lab%20-DC/Client/C5.png)
+1. Once more navigate to *Add roles and features*, click *Next* and choose your *DC* server. Once here click *DHCP Server* and *Add Featyure* followed by *Next* and *Install*![](https://i.imgur.com/BrplHRd.png)
+2. Once done, click *Close*.
 
-## Step 6: Find CLIENT1 on DC
-- On DC, click start > Windows Administrator Tools > Active Directory Users and Computers
-- Under the Computers container/folder we see our CLIENT1 computer
+![](https://i.imgur.com/etahNIP.png)
 
-![](images/Home%20Lab%20-DC/Client/C6.png)
+3. Great, now navigate to *Tools* and *DHCP*. ![](https://i.imgur.com/a37ge50.png)
+4. Now lets set a scope of IP addresses that the DHCP will be handing out to clients by *Clicking* on IPv4 and chooseing *New Scope*![](https://i.imgur.com/RyyvGFN.png)
+5. Set a name that for the scope, I went with the IP range to make it easier to see and click *Next*![](https://i.imgur.com/fgyWDCJ.png)
+6. As seen in the diagram for this lab environment the scope of IP addresses is set to what is seen in the picture. *Length* can be set to *24* as that will give the network 254 available hosts. Click *Next*![](https://i.imgur.com/DFI2WYB.png)
+7. *Lease duration* is simply put: *How long will an IP address be given to a device*. For a homelab like this, it can be whatever you like. If this was real environment, then it depends on that environment. The longer the lease, the longer that particular IP is locked to an device. Once lease is set click *Next*![](https://i.imgur.com/ogMzi1T.png)
+8. Click *Configure options* and click *Next*![](https://i.imgur.com/C50OvuE.png)
+9. Now its time to *specify the routers IP address*, in this case its the DC that serves as the router for the Internal Virtual Network, thus the DC's IP address is set. *Set the IP Adress* and click *Add* then *Next* ![](https://i.imgur.com/uBApXd3.png)
+10. Here we see the DC's IP Address is added, click *Next*.
 
-## Step 7: Use generated user to log into CLIENT1
-- Back on CLIENT1 sign out and sign back in by selecting Other User from the bottom
-- Choose a name from the names.txt file (from our PowerShell script) and login **Password1**
+![](https://i.imgur.com/OybEeXY.png)
 
-![](images/Home%20Lab%20-DC/Client/C7.png)
+11. Click *Next*![](https://i.imgur.com/gyuLOcC.png)
+12. *Activate the scope* and press *Next*![](https://i.imgur.com/tDamMjg.png)
+13. Done! Time to get the PowerShell script going, that will add around 1000 users to the AD.
 
- And we’re in! (Use the `whoami` command to confirm).
+## Adding Users to AD with PowerShell Script.
 
-![](images/Home%20Lab%20-DC/Client/FINAL.png)
+>This PowerShell script will add around 1000 users to Active Directory.
+
+As done earlier under: ("*Create DC, point 4*".) when setting up the DC Virtual Machine by allowing for *Copy/Paste* and *Clip/Drop* we can *copy/paste* the PowerShell script directly to the VM from our own computer. 
+
+1. *Add your name to* "names.txt" file and save the file.
+2. Click on *Start* --> *Windows PowerShell ISE* --> Rightclick *More* --> *Run as Administrator*.
+3. Click *Yes* when asked for User Account Control.
+4. Click on *Open* in top left corner. Locate the Powershell script that should be on the Desktop in a folder. *Open the script*.
+![](https://i.imgur.com/4gFDciW.png)
+
+5. By default we can't run scripts in Win Server, but since this is a lab-environment and we want to run the script so users can be added to AD, a Powershell command is needed.
+   Run: *Set-ExecutionPolicy Unrestricted* and *click* "*Yes to all*".
+
+![](https://i.imgur.com/NJaHzi2.png)
+
+6. Navigate to the folder where the PowerShell script is.
+![](https://i.imgur.com/nk9SzPu.png)
+
+8. *Run the script* by navigating to the directory where the PowerShell script is and *click* "Play" in the top toolbar.
+![](https://i.imgur.com/UOcpsuW.png)
+
+## Create VM 2 (Client 1)
+
+> Time to create a new VM that will be connected to the private Network.
+
+1. In *Oracle VM* click on *New* and give this VM a name and chose a version. Then click on *next* and *add your hardware specifications.*
+![](https://i.imgur.com/9oWN2wh.png)
+
+2. Once the VM is set-up *right-click* and go to *settings* and navigate to *network* and under *adapter 1* choose *Internal Network* instead of the default NAT.
+
+![](https://i.imgur.com/ttHzW4N.png)
+
+3. Once done, *start the VM* by clicking on it.
+4. Chose the location of the *Win10.iso* file downloaded earlier and proceed.
+![](https://i.imgur.com/UCc97QS.png)
+5. Follow the Installations and *skip the product key*.
+![](https://i.imgur.com/Nis4aW0.png)
+6. Choose *Windows 10 Pro* and click *next*
+
+![](https://i.imgur.com/tONDaNQ.png)
+
+
+7. Proceed and chose *Custom Installation* and click *next*
+8. Wait for the installation to complete, and *don't press anything meanwhile*.
+   ![](https://i.imgur.com/39q7oI1.png)
+
+9. Fill in your *region* and *language* etc. Then click on *Continue with limited setup*
+   ![](https://i.imgur.com/2PtANZ8.png)
+
+10. *Fill in a username* and *skip password*
+![](https://i.imgur.com/Mox3dgT.png)
+
+11. I usually *turn off every option*.
+
+## Join Domain
+
+> The VM is up and running and now it needs to be given a proper name and join the Domain.
+
+1. *Renaming the PC to "Client1"* by *right clicking "Start"* --> *System*
+
+![](https://i.imgur.com/0UeHR6l.png)
+
+2. *Scroll down to "Rename this PC (advanced)*
+![](https://i.imgur.com/zqSKKDo.png)
+
+3. Click the *Change* button
+
+![](https://i.imgur.com/35QN5U1.png)
+
+4. Set the computer name and make it *Member of Domain*.
+
+![](https://i.imgur.com/XEyQVvb.png)
+
+5. Enter *User name* and *Password*
+![](https://i.imgur.com/XWqxO1d.png)
+
+6. *Reboot the PC*
+
+We are all done! This lab simulates a simple corporate environment network.
+Hope you enjoyed this lab. Take care! 
+
+## Credits
+
+This project was made with the help of Josh Madakors video which can be found [Here](https://youtu.be/MHsI8hJmggI?si=4qqk4cJWn9cxtlSX)
+
+
